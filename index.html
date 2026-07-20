@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Customer Segmentation Dashboard | RFM Data Analytics Project</title>
+    <meta name="description" content="An interactive Retail Customer Segmentation Dashboard demonstrating RFM analysis, cohort analytics, and customer retention insights using Python, SQL, and Power BI on 541K+ retail transactions.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="glass-bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Main Sidebar / Header -->
+        <header class="main-header">
+            <div class="header-logo">
+                <span class="logo-icon">📊</span>
+                <div>
+                    <h1>Retail Customer Analytics</h1>
+                    <p class="header-subtitle">Customer Segmentation & RFM Analysis Dashboard</p>
+                </div>
+            </div>
+            <div class="header-tags">
+                <span class="tag-pill tag-python"><span class="pill-dot"></span> Python (EDA)</span>
+                <span class="tag-pill tag-sql"><span class="pill-dot"></span> SQL (Extraction)</span>
+                <span class="tag-pill tag-powerbi"><span class="pill-dot"></span> Power BI</span>
+                <span class="tag-pill tag-excel"><span class="pill-dot"></span> Excel (Prep)</span>
+            </div>
+        </header>
+
+        <!-- KPI Summary Cards -->
+        <section class="kpi-grid">
+            <div class="kpi-card" id="kpi-revenue">
+                <div class="kpi-content">
+                    <span class="kpi-label">Total Revenue</span>
+                    <h2 class="kpi-value" id="val-revenue">£8.93M</h2>
+                    <span class="kpi-trend trend-up">↑ 100% Transactions Cleaned</span>
+                </div>
+                <div class="kpi-icon">💰</div>
+            </div>
+            <div class="kpi-card" id="kpi-transactions">
+                <div class="kpi-content">
+                    <span class="kpi-label">Total Transactions</span>
+                    <h2 class="kpi-value" id="val-transactions">541.9K</h2>
+                    <span class="kpi-trend text-muted">UCI Online Retail Dataset</span>
+                </div>
+                <div class="kpi-icon">🧾</div>
+            </div>
+            <div class="kpi-card" id="kpi-customers">
+                <div class="kpi-content">
+                    <span class="kpi-label">Active Customers</span>
+                    <h2 class="kpi-value" id="val-customers">4,372</h2>
+                    <span class="kpi-trend trend-up">Unique RFM Accounts</span>
+                </div>
+                <div class="kpi-icon">👥</div>
+            </div>
+            <div class="kpi-card" id="kpi-top-country">
+                <div class="kpi-content">
+                    <span class="kpi-label">Top Country</span>
+                    <h2 class="kpi-value" id="val-country">United Kingdom</h2>
+                    <span class="kpi-trend trend-share">91.7% Revenue Share</span>
+                </div>
+                <div class="kpi-icon">🇬🇧</div>
+            </div>
+        </section>
+
+        <!-- Main Charts Section -->
+        <section class="dashboard-grid">
+            <!-- Line Chart: Sales Trend -->
+            <div class="dashboard-card chart-card large-chart">
+                <div class="card-header">
+                    <h3>Monthly Revenue Growth Trend (Dec 2010 - Dec 2011)</h3>
+                    <div class="card-badge">Timeline Analytics</div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="revenueTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Doughnut Chart: Segments -->
+            <div class="dashboard-card chart-card">
+                <div class="card-header">
+                    <h3>RFM Customer Segments</h3>
+                    <div class="card-badge">Clustering</div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="segmentChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Bar Chart: Country Revenue -->
+            <div class="dashboard-card chart-card">
+                <div class="card-header">
+                    <h3>Revenue Contribution by Country</h3>
+                    <div class="card-badge">Geographic</div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="countryRevenueChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- RFM Interactive Explorer & Calculator Section -->
+        <section class="explorer-section">
+            <!-- Customer Explorer -->
+            <div class="dashboard-card explorer-card">
+                <div class="card-header flex-header">
+                    <div>
+                        <h3>Customer RFM Explorer</h3>
+                        <p class="card-desc">Search, filter, and drill-down into specific customer RFM metrics and classifications.</p>
+                    </div>
+                    <div class="filters-container">
+                        <div class="search-box">
+                            <input type="text" id="search-cust-id" placeholder="Search Customer ID...">
+                            <span class="search-icon">🔍</span>
+                        </div>
+                        <select id="filter-segment">
+                            <option value="ALL">All Segments</option>
+                            <option value="Champions">Champions</option>
+                            <option value="Loyal Customers">Loyal Customers</option>
+                            <option value="Potential Loyalists">Potential Loyalists</option>
+                            <option value="At Risk">At Risk</option>
+                            <option value="Lost Customers">Lost Customers</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="customer-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="id">Customer ID <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="country">Country <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="recency">Recency (Days) <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="frequency">Frequency <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="monetary">Monetary Value <span class="sort-indicator">↕</span></th>
+                                <th class="sortable" data-sort="segment">Segment <span class="sort-indicator">↕</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="customer-table-body">
+                            <!-- Populated dynamically via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <div class="pagination-info">
+                        Showing <span id="pag-start">1</span> to <span id="pag-end">10</span> of <span id="pag-total">0</span> customers
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn btn-prev" id="btn-prev-page" disabled>Previous</button>
+                        <button class="btn btn-next" id="btn-next-page">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RFM Calculator Simulator -->
+            <div class="dashboard-card calculator-card">
+                <div class="card-header">
+                    <h3>RFM Segment Simulator</h3>
+                    <p class="card-desc">Calculate segmentation and marketing recommendations for a custom retail client in real-time.</p>
+                </div>
+                <form id="rfm-calc-form" class="calc-form">
+                    <div class="form-group">
+                        <label for="calc-recency">Recency (Days since last order)</label>
+                        <div class="input-with-hint">
+                            <input type="number" id="calc-recency" min="0" max="373" value="10" required>
+                            <span class="input-hint">0 - 373 days</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="calc-frequency">Frequency (Number of orders)</label>
+                        <div class="input-with-hint">
+                            <input type="number" id="calc-frequency" min="1" max="500" value="15" required>
+                            <span class="input-hint">1 - 500 orders</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="calc-monetary">Monetary Value (Total spend in £)</label>
+                        <div class="input-with-hint">
+                            <input type="number" id="calc-monetary" min="1" max="300000" value="8500" required>
+                            <span class="input-hint">£1 - £300,000</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" id="btn-simulate">Run RFM Simulation</button>
+                </form>
+
+                <div class="calculator-result-container hidden" id="calc-result">
+                    <div class="result-divider"></div>
+                    <div class="result-header">
+                        <span class="result-label">Calculated Segment</span>
+                        <div class="segment-badge" id="calc-result-segment">Champions</div>
+                    </div>
+                    <div class="result-body">
+                        <div class="result-metric-grid">
+                            <div class="metric-box">
+                                <span class="box-label">R Score</span>
+                                <span class="box-val" id="calc-result-r">5</span>
+                            </div>
+                            <div class="metric-box">
+                                <span class="box-label">F Score</span>
+                                <span class="box-val" id="calc-result-f">5</span>
+                            </div>
+                            <div class="metric-box">
+                                <span class="box-label">M Score</span>
+                                <span class="box-val" id="calc-result-m">5</span>
+                            </div>
+                        </div>
+                        <div class="recommendation-box">
+                            <h5>Strategic Recommendation:</h5>
+                            <p id="calc-result-strategy">Reward them. Introduce new products early. Exclusives.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Business Strategy & Insight Panel -->
+        <section class="insights-section">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>Actionable Marketing Actions per Segment</h3>
+                    <p class="card-desc">RFM segmentation helps businesses allocate advertising spend efficiently and increase customer lifetime value.</p>
+                </div>
+                <div class="insights-grid" id="insights-grid-container">
+                    <!-- Populated dynamically via app.js -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Developer Technical Workspace (Python / SQL / Excel) -->
+        <section class="developer-section">
+            <div class="dashboard-card dev-card">
+                <div class="card-header">
+                    <h3>🛠️ Project Technical Stack & Data Pipeline</h3>
+                    <p class="card-desc">Explore the codebase used for extracting, cleaning, and processing the dataset from raw transactional records to structured RFM profiles.</p>
+                </div>
+                <div class="dev-workspace-layout">
+                    <div class="ide-sidebar">
+                        <ul class="file-list">
+                            <li class="file-item active" data-file="pythonCleaning">
+                                <span class="file-icon">🐍</span>
+                                <span class="file-name">data_cleaning.py</span>
+                            </li>
+                            <li class="file-item" data-file="pythonRfm">
+                                <span class="file-icon">🐍</span>
+                                <span class="file-name">rfm_segmentation.py</span>
+                            </li>
+                            <li class="file-item" data-file="sqlAnalysis">
+                                <span class="file-icon">🗃️</span>
+                                <span class="file-name">extraction.sql</span>
+                            </li>
+                            <li class="file-item" data-file="excelPrep">
+                                <span class="file-icon">📑</span>
+                                <span class="file-name">excel_data_prep.md</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="ide-editor">
+                        <div class="editor-header">
+                            <div class="editor-dots">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                            </div>
+                            <div class="editor-filename" id="current-filename">data_cleaning.py</div>
+                        </div>
+                        <div class="editor-content">
+                            <pre><code class="code-display" id="code-content-block">Loading code...</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Designed and built for the Retail Customer Segmentation Portfolio Project</p>
+            <p class="footer-note">Online Retail Transaction Dataset sourced from UCI Machine Learning Repository (541K+ rows analyzed).</p>
+        </footer>
+    </div>
+
+    <!-- Script references -->
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
